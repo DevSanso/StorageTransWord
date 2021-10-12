@@ -12,7 +12,7 @@ pub trait Config  {
 
 
 pub struct Response {
-    statusCode : u16,
+    status_code : u16,
     data : String
 }
 
