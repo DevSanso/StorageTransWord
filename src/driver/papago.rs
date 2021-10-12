@@ -90,3 +90,20 @@ impl Driver for PapagoDriver {
         
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::include_str;
+    use super::*;
+    #[test]
+    fn run_papago() {
+        let source = include_str!("../../test_config/papago.json");
+        let driver : PapagoDriver;
+        {
+            let config = PapagoConfig::new(String::from(source)).unwrap();
+            driver = PapagoDriver::new(config);
+        }
+        let res = driver.trans(String::from("hello"));
+        println!("{} : {}",res.statusCode,res.data);
+    }
+}
