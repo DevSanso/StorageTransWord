@@ -90,7 +90,7 @@ impl Driver for PapagoDriver {
             .send().expect("can't connect server");
         
         SelfResponse {
-            statusCode : res.status().as_u16(),
+            status_code : res.status().as_u16(),
             data : PapagoDriver::extract_trans_text_in_res_body(res.text().unwrap())
         }
         
