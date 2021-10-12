@@ -2,6 +2,7 @@ use super::{Driver,Config};
 use super::Response as SelfResponse;
 use serde::{Deserialize};
 use serde_json;
+use serde_json::{Value};
 use reqwest;
 use reqwest::header::*;
 
@@ -60,8 +61,13 @@ impl PapagoDriver {
         header
     }
 
-    fn body(&self,word : &String) -> String {
+    fn body(word : &String) -> String {
         format!("source=en&target=ko&text={}",word)
+    }
+    fn extract_trans_text_in_res_body(raw : String) -> String {
+        let val : Value =  serde_json::from_str(raw.as_str()).unwrap();
+        
+        val["message"]["result"]["translatedText"].to_string()
     }
 }
 
@@ -80,12 +86,12 @@ impl Driver for PapagoDriver {
         
         let res = client.post(URL)
             .headers(self.headers())
-            .body(self.body(&word))
+            .body(PapagoDriver::body(&word))
             .send().expect("can't connect server");
         
         SelfResponse {
             statusCode : res.status().as_u16(),
-            data : res.text().unwrap()
+            data : PapagoDriver::extract_trans_text_in_res_body(res.text().unwrap())
         }
         
     }
@@ -104,6 +110,6 @@ mod tests {
             driver = PapagoDriver::new(config);
         }
         let res = driver.trans(String::from("hello"));
-        println!("{} : {}",res.statusCode,res.data);
+        println!("{} : {}",res.status_code,res.data);
     }
 }
