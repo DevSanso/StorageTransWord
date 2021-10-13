@@ -15,12 +15,12 @@ const URL : &'static str  = "https://openapi.naver.com/v1/papago/n2mt";
 
 
 
-struct PapagoDriver {
+pub struct PapagoDriver {
     client_id : String,
     client_secret : String,
 }
 #[derive(Deserialize)]
-struct PapagoConfig {
+pub struct PapagoConfig {
     client_id : String,
     client_secret : String,
 }
@@ -69,18 +69,20 @@ impl PapagoDriver {
         
         val["message"]["result"]["translatedText"].to_string()
     }
-}
 
-impl Driver for PapagoDriver {
-    fn new(config : impl Config) -> Self {
+
+    pub fn new(config : impl Config) -> Self {
         PapagoDriver {
             client_id : config.getAttr("client_id"),
             client_secret : config.getAttr("client_secret")
         }
     }
 
+    
+}
 
 
+impl Driver for PapagoDriver {
     fn trans(&self,word : String) -> SelfResponse {
         let client = reqwest::blocking::Client::new();
         
