@@ -57,17 +57,19 @@ impl Word {
         count
     }
 
-    pub fn Push(conn : &Connection,word : Word) -> rusqlite::Result<()> {
+    pub fn push(conn : &Connection,word : Word) -> rusqlite::Result<()> {
         let count = Word::exist_data(&conn, &word);
         if count != 0 {
             return Word::change_data(&conn,word);
         }
         Word::push_new_data(&conn, word)
     }
+    pub fn get_word_in_chapter(conn : &Connection,book : String,chapter : i32) {
+
+    }
 
 
-
-    pub fn Pop(conn : &Connection,word : Word) -> rusqlite::Result<()> {
+    pub fn pop(conn : &Connection,word : Word) -> rusqlite::Result<()> {
         const del_sql : &str = "DELETE FROM word WHERE book=?1 AND chapter=?2 AND origin_text=?3;";
         match conn.execute(del_sql, params![word.book.clone(),word.chapter.clone(),word.origin_text.clone()]) {
             Ok(_) => Ok(()),
@@ -133,7 +135,7 @@ mod tests {
         init_db(&conn);
         let mut data = super::Word::new(String::from("book"),0,0,String::from("df"),String::from("sdf"));
         
-        super::Word::Push(&conn, data)?;
+        super::Word::push(&conn, data)?;
         data = super::Word::new(String::from("book"),0,0,String::from("df"),String::from("sdf"));
         let res = conn.query_row("SELECT * FROM word;",[], |x| Ok(super::Word {
             book : x.get(0).unwrap(),
@@ -146,7 +148,7 @@ mod tests {
 
         println!("before : {}",super::Word::exist_data(&conn, &data));
 
-        super::Word::Pop(&conn, data)?;
+        super::Word::pop(&conn, data)?;
         data = super::Word::new(String::from("book"),0,0,String::from("df"),String::from("sdf"));
        
 
