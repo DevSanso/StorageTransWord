@@ -39,9 +39,9 @@ impl Word {
         }
     }
     fn change_data(conn : &Connection,word : Word) -> rusqlite::Result<()> {
-        const upd_sql : &str = "UPDATE word SET chapter=?1,page=?2,origin_text=?3,trans_text=?4  WHERE origin_text=?5 AND book=?6;";
+        const upd_sql : &str = "UPDATE word SET chapter=?1,page=?2,origin_text=?3,trans_text=?4  WHERE book=?5 AND chapter=?6 AND origin_text=?7;";
         let res = conn.execute(upd_sql, 
-            params![word.chapter,word.page,word.origin_text.clone(),word.trans_text,word.origin_text.clone(),word.book.clone()]);
+            params![word.chapter,word.page,word.origin_text.clone(),word.trans_text,word.book.clone(),word.chapter.clone(),word.origin_text.clone()]);
 
         match res {
             Ok(_) => Ok(()),
@@ -49,9 +49,9 @@ impl Word {
         }
     }
     fn exist_data(conn : &Connection,word : &Word) -> usize{
-        const ext_sql : &str = "SELECT EXISTS(SELECT * FROM word WHERE origin_text =?);";
+        const ext_sql : &str = "SELECT EXISTS(SELECT * FROM word WHERE origin_text =1 AND book=?2);";
         let count : usize = conn.query_row(ext_sql, 
-            [word.origin_text.clone()], 
+            [word.origin_text.clone(),word.book.clone()], 
             |x| x.get(0)
         ).unwrap();
         count
@@ -107,7 +107,7 @@ mod tests {
         let mut d = super::Word::new(String::from("book"),0,0,String::from("df"),String::from("sdf"));
         super::Word::push_new_data(&conn, data)?;
 
-        data = super::Word::new(String::from("book"),0,1,String::from("df"),String::from("sdf123"));
+        data = super::Word::new(String::from("book"),0,1,String::from("df"),String::from("sdf1223"));
         d = super::Word::new(String::from("book"),0,1,String::from("df"),String::from("sdf1223"));
         super::Word::change_data(&conn,data)?;
         let res = conn.query_row("SELECT * FROM word;",[], |x| Ok(super::Word {
