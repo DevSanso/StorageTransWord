@@ -41,7 +41,7 @@ impl Word {
     fn change_data(conn : &Connection,word : Word) -> rusqlite::Result<()> {
         const upd_sql : &str = "UPDATE word SET chapter=?1,page=?2,origin_text=?3,trans_text=?4  WHERE book=?5 AND chapter=?6 AND origin_text=?7;";
         let res = conn.execute(upd_sql, 
-            params![word.chapter,word.page,word.origin_text.clone(),word.trans_text,word.book.clone(),word.chapter.clone(),word.origin_text.clone()]);
+            params![word.chapter,word.page,word.origin_text.clone(),word.trans_text,word.book.clone(),word.chapter,word.origin_text.clone()]);
 
         match res {
             Ok(_) => Ok(()),
@@ -49,7 +49,7 @@ impl Word {
         }
     }
     fn exist_data(conn : &Connection,word : &Word) -> usize{
-        const ext_sql : &str = "SELECT EXISTS(SELECT * FROM word WHERE origin_text =1 AND book=?2);";
+        const ext_sql : &str = "SELECT EXISTS(SELECT * FROM word WHERE origin_text =?1 AND book=?2);";
         let count : usize = conn.query_row(ext_sql, 
             [word.origin_text.clone(),word.book.clone()], 
             |x| x.get(0)
@@ -67,8 +67,12 @@ impl Word {
 
 
 
-    pub fn Pop() {
-
+    pub fn Pop(conn : &Connection,word : Word) -> rusqlite::Result<()> {
+        const del_sql : &str = "DELETE FROM word WHERE book=?1 AND chapter=?2 AND origin_text=?3;";
+        match conn.execute(del_sql, params![word.book.clone(),word.chapter.clone(),word.origin_text.clone()]) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(err)
+        }
 
     }
 }
@@ -123,6 +127,33 @@ mod tests {
         
         Ok(())
     }
+    #[test]
+    fn table_pop_test() -> rusqlite::Result<()> {
+        let conn = rusqlite::Connection::open_in_memory()?;
+        init_db(&conn);
+        let mut data = super::Word::new(String::from("book"),0,0,String::from("df"),String::from("sdf"));
+        
+        super::Word::Push(&conn, data)?;
+        data = super::Word::new(String::from("book"),0,0,String::from("df"),String::from("sdf"));
+        let res = conn.query_row("SELECT * FROM word;",[], |x| Ok(super::Word {
+            book : x.get(0).unwrap(),
+            chapter : x.get(1).unwrap(),
+            page : x.get(2).unwrap(),
+            origin_text : x.get(3).unwrap(),
+            trans_text : x.get(4).unwrap()
+        })).unwrap();
+        println!("{}",res);
 
+        println!("before : {}",super::Word::exist_data(&conn, &data));
+
+        super::Word::Pop(&conn, data)?;
+        data = super::Word::new(String::from("book"),0,0,String::from("df"),String::from("sdf"));
+       
+
+        println!("after : {}",super::Word::exist_data(&conn, &data));
+        
+
+        Ok(())
+    }
   
 }
