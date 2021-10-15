@@ -109,8 +109,19 @@ impl Word {
         }
         Word::push_new_data(&conn, word)
     }
-    pub fn get_word_in_chapter(conn : &Connection,book : String,chapter : i32) {
-
+    pub fn get_word_in_book_and_chapter(conn : &Connection,book_id : i32,chapter : i32) -> rusqlite::Result<Vec<Word>> {
+        const Q : &str = "SELECT page,origin_text,trans_text FROM word WHERE book_id = ?1 AND chapter=?2;";
+        let mut stmt = conn.prepare(Q)?;
+        let iter = stmt.query_map([book_id,chapter], |row| Ok(Word {
+            book_id : book_id,
+            chapter : chapter,
+            page : row.get(0)?,
+            origin_text : row.get(1)?,
+            trans_text : row.get(2)?
+        }))?;
+        let mut v : Vec<Word> = Vec::new();
+        iter.for_each(|x| v.push(x.unwrap()));
+        Ok(v)
     }
 
 
@@ -234,6 +245,24 @@ mod tests {
 
         println!("after : {}",super::Word::exist_data(&conn, &data));
         
+
+        Ok(())
+    }
+    #[test]
+    fn table_list_test() -> rusqlite::Result<()> {
+        let conn = rusqlite::Connection::open_in_memory()?;
+        init_db(&conn);
+        push_book(&conn);
+
+        let mut data = super::Word::new(1,0,0,String::from("df"),String::from("sdf"));
+        super::Word::push_new_data(&conn, data)?;
+        data= super::Word::new(1,0,0,String::from("df22"),String::from("sdf12"));
+        super::Word::push_new_data(&conn, data)?;
+
+        let v = super::Word::get_word_in_book_and_chapter(&conn, 1, 0)?;
+        for x in v {
+            println!("{}",x);
+        }
 
         Ok(())
     }
