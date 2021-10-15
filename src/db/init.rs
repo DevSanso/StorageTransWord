@@ -2,6 +2,7 @@ use rusqlite::{Connection,Error};
 
 
 const INIT_TABLE : &str = "CREATE TABLE word(
+    book VARCHAR(256) PRIMARY KEY,
     chapter        INTEGER,
     page             INTEGER,
     origin_text   VARCHAR(256),
