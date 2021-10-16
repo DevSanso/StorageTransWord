@@ -4,9 +4,10 @@ use std::fmt::{Display,Formatter,Result};
 
 
 
-struct Book {
-    book_id : i32,
-    name : String
+
+pub struct Book {
+    pub book_id : i32,
+    pub name : String
 }
 
 impl Display for Book {
@@ -54,12 +55,12 @@ impl Book {
     
 }
 
-struct Word {
-    book_id : i32,
-    chapter : i32,
-    page : i32,
-    origin_text : String,
-    trans_text : String
+pub struct Word {
+    pub book_id : i32,
+    pub chapter : i32,
+    pub page : i32,
+    pub origin_text : String,
+    pub trans_text : String
 }
 
 impl Display for Word {
