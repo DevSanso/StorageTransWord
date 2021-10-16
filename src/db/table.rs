@@ -25,9 +25,16 @@ impl Book {
         }
     }
 
-    pub fn pop(conn : &Connection,name : String) -> rusqlite::Result<()> {
-        const DEL_Q : &str = "DELETE FROM book WHERE name=?1;";
-        match conn.execute(DEL_Q, [name]) {
+    pub fn pop(conn : &Connection,id : i32) -> rusqlite::Result<()> {
+        const DEL_W_Q : &str = "DELETE FROM word WHERE book_id=?1;";
+        match conn.execute(DEL_W_Q, [id]) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(err)
+        }?;
+
+
+        const DEL_Q : &str = "DELETE FROM book WHERE book_id=?1;";
+        match conn.execute(DEL_Q, [id]) {
             Ok(_) => Ok(()),
             Err(err) => Err(err)
         }
@@ -160,7 +167,7 @@ mod tests {
             println!("{}", x);
         }
         println!("\n\n\n");
-        super::Book::pop(&conn, String::from("hi"));
+        super::Book::pop(&conn, 1)?;
         v = super::Book::list(&conn)?;
         println!("pop");
         for x in v {
