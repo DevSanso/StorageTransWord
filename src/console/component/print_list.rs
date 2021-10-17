@@ -22,7 +22,10 @@ impl Display for BookList {
         write!(f,"book_list\n\n")?;
         writeln!(f,"print => {id}  :  {name} \n\n",id = "bookID",name = "bookName")?;
         let count = self.arr.len();
-
+        
+        if count == 0 {
+            return Ok(());
+        }
         for i in 0..count-1 {
             writeln!(f," {id}  :  {name} ",id = self.arr[i].book_id,name = self.arr[i].name)?;
         }
