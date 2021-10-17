@@ -4,6 +4,7 @@ use rusqlite::Connection;
 
 
 use crate::db::table::Book;
+use crate::console::view::err::ErrorView;
 use super::super::component::{Title,BookList};
 
 
@@ -31,6 +32,8 @@ impl MainMenu {
     }
 
     fn make_next_view(&self,n : i32) -> Option<Box<dyn super::View>> {
+        if n == 9 {return None;}
+
         None
     } 
 }
@@ -44,7 +47,10 @@ impl super::View for MainMenu {
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
-        self.is_close = true;
+        let val = self.input_data.clone().unwrap_or(-999);
+        if val == 9 {
+            self.is_close = true;
+        }
         Ok(())
     }
 
@@ -55,14 +61,14 @@ impl super::View for MainMenu {
 
         Ok(())
     }
-    fn is_running(&self) -> bool {
+    fn is_more_run(&self) -> bool {
         !self.is_close
     }
     fn next(&self) -> Option<Box<dyn super::View>> {
         let val = self.input_data.clone();
         match val {
             Ok(ok) => self.make_next_view(ok),
-            Err(err) => None
+            Err(err) => Some(Box::new(ErrorView::new(err)))
         }
     }
 }
