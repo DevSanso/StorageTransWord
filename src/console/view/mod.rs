@@ -19,7 +19,7 @@ trait View {
     fn display(&self) -> io::Result<()> ;
     fn input(&mut self) -> io::Result<()>;
     fn update(&mut self) -> io::Result<()>;
-    fn is_running(&self) -> bool;
+    fn is_more_run(&self) -> bool;
     fn next(&self) -> Option<Box<dyn View>>;
     
     fn clear(&self) -> io::Result<()> {
@@ -30,12 +30,10 @@ trait View {
     }
 
     fn exec(&mut self) -> io::Result<()> {
-        while self.is_running() {
-            self.clear()?;
-            self.display()?;
-            self.input()?;
-            self.update()?;
-        }
+        self.clear()?;
+        self.display()?;
+        self.input()?;
+        self.update()?;
 
         Ok(())
     }
@@ -44,7 +42,7 @@ trait View {
 }
 
 pub mod main;
-
+pub mod err;
 
 
 
