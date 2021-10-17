@@ -4,14 +4,15 @@ use rusqlite::Connection;
 
 
 use crate::db::table::Book;
-use crate::console::view::err::ErrorView;
+use crate::console::view::err::{ErrorView,ErrorStringView};
+use crate::console::view::make_book::MakeBookView;
 use super::super::component::{Title,BookList};
 
 
 
 
-struct MainMenu {
-    conn : &'static Connection,
+struct MainMenu<'a> {
+    conn : &'a Connection,
     is_close : bool,
     title : Title,
     list : BookList,
@@ -19,8 +20,8 @@ struct MainMenu {
     input_data : Result<i32,std::num::ParseIntError>,
 }
 
-impl MainMenu {
-    pub fn new(conn : &'static Connection) -> MainMenu {
+impl<'a> MainMenu<'a> {
+    pub fn new(conn : &'a Connection) -> MainMenu {
         MainMenu{
             conn : conn,
             is_close : false,
@@ -32,14 +33,19 @@ impl MainMenu {
     }
 
     fn make_next_view(&self,n : i32) -> Option<Box<dyn super::View>> {
-        if n == 9 {return None;}
 
-        None
+        match n {
+            1 => None,
+            9 => None,
+            _ => Some(Box::new(ErrorStringView::new("only input 1,2,9")))
+        }
+
+        
     } 
 }
 
 
-impl super::View for MainMenu {
+impl<'a> super::View for MainMenu<'a> {
     fn display(&self) -> io::Result<()> {
         println!("{}",self.title);
         println!("{}",self.list);
@@ -74,3 +80,23 @@ impl super::View for MainMenu {
 }
 
 
+#[cfg(test)]
+mod tests {
+    use std::io;
+    use rusqlite::Connection;
+    use super::MainMenu;
+    use super::super::View;
+    use crate::db::init::init_db;
+
+    #[test]
+    fn main_menu_test() -> io::Result<()> {
+        let c = Connection::open_in_memory().unwrap();
+        init_db(&c);
+        let mut m  :Box<dyn View>  = Box::new(MainMenu::new(&c));
+        m.exec()?;
+        m = m.next().unwrap();
+        m.exec()?;
+
+        Ok(())
+    }
+}
