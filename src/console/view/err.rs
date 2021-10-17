@@ -1,10 +1,11 @@
 use std::error::Error;
 use std::io::{self,Read};
 
+
 use super::View;
 
 pub struct ErrorView<T>  where T : Error{
-    msg : T
+    msg :  T
 }
 
 
@@ -16,6 +17,40 @@ impl<T> ErrorView<T> where T : Error{
 
 
 impl<T> View for ErrorView<T> where T : Error {
+    fn display(&self) -> io::Result<()> {
+        println!("error message : {}",self.msg);
+        print!("press click enter");
+
+        Ok(())
+    }
+    fn input(&mut self) -> io::Result<()> {
+        io::stdin().lock().read_to_string(&mut String::new())?;
+        Ok(())
+    }
+    fn update(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+    fn is_more_run(&self) -> bool {
+        false
+    }
+    fn next(&self) -> Option<Box<dyn View>>{
+        None
+    }
+}
+
+
+pub struct ErrorStringView<'a>{
+    msg : &'a str
+}
+
+impl<'a> ErrorStringView<'a>{
+    pub fn new (err : &'a str) -> ErrorStringView {
+        ErrorStringView {msg : err}
+    }
+}
+
+
+impl<'a> View for ErrorStringView<'a> {
     fn display(&self) -> io::Result<()> {
         println!("error message : {}",self.msg);
         print!("press click enter");
