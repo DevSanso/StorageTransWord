@@ -14,13 +14,14 @@ fn clean() -> io::Result<ExitStatus> {
 
 
 
+
 trait View {
 
     fn display(&self) -> io::Result<()> ;
     fn input(&mut self) -> io::Result<()>;
     fn update(&mut self) -> io::Result<()>;
     fn is_more_run(&self) -> bool;
-    fn next(&self) -> Option<Box<dyn View>>;
+    fn next<'parent>(&self) -> Option<Box<dyn View + 'parent>>;
     
     fn clear(&self) -> io::Result<()> {
         match clean() {
@@ -49,10 +50,12 @@ pub mod make_book;
 
 #[cfg(test)]
 mod tests {
-
+    use std::io::{self,BufRead};
     #[test]
     fn clean_test() {
         println!("hello! \n");
         super::clean().unwrap();
     }
+
+    
 }

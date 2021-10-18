@@ -2,7 +2,7 @@ use std::io::{self,BufRead};
 use rusqlite::Connection;
 
 
-
+use crate::var::Var;
 use crate::db::table::Book;
 use crate::console::view::err::{ErrorView,ErrorStringView};
 use crate::console::view::make_book::MakeBookView;
@@ -11,8 +11,7 @@ use super::super::component::{Title,BookList};
 
 
 
-struct MainMenu<'a> {
-    conn : &'a Connection,
+struct MainMenu {
     is_close : bool,
     title : Title,
     list : BookList,
@@ -20,20 +19,19 @@ struct MainMenu<'a> {
     input_data : Result<i32,std::num::ParseIntError>,
 }
 
-impl<'a> MainMenu<'a> {
-    pub fn new(conn : &'a Connection) -> MainMenu {
+impl MainMenu{
+    pub fn new() -> MainMenu {
+        let conn = Var::get_db_conn_as_mut_ref();
         MainMenu{
-            conn : conn,
             is_close : false,
             title : Title::new(),
-            list : BookList::new(Book::list(&conn).unwrap()),
+            list : BookList::new(Book::list(conn).unwrap()),
 
             input_data : Result::Ok(0)
         }
     }
 
-    fn make_next_view(&self,n : i32) -> Option<Box<dyn super::View>> {
-
+    fn make_next_view<'b>(&self,n : i32) -> Option<Box<dyn super::View + 'b>> {
         match n {
             1 => None,
             9 => None,
@@ -45,11 +43,11 @@ impl<'a> MainMenu<'a> {
 }
 
 
-impl<'a> super::View for MainMenu<'a> {
+impl super::View for MainMenu{
     fn display(&self) -> io::Result<()> {
-        println!("{}",self.title);
-        println!("{}",self.list);
-        print!("입력 => 책 생성 (1), 책 불려오기(2), 종료(9)");
+        print!("{}\n",self.title);
+        print!("{}\n",self.list);
+        print!("입력 => 책 생성 (1), 책 불려오기(2), 종료(9) >>");
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
@@ -57,6 +55,8 @@ impl<'a> super::View for MainMenu<'a> {
         if val == 9 {
             self.is_close = true;
         }
+        let conn = Var::get_db_conn_as_mut_ref();
+        self.list = BookList::new(Book::list(conn).unwrap());
         Ok(())
     }
 
@@ -70,7 +70,8 @@ impl<'a> super::View for MainMenu<'a> {
     fn is_more_run(&self) -> bool {
         !self.is_close
     }
-    fn next(&self) -> Option<Box<dyn super::View>> {
+
+    fn next<'parent>(&self) -> Option<Box<dyn super::View + 'parent>> {
         let val = self.input_data.clone();
         match val {
             Ok(ok) => self.make_next_view(ok),
@@ -83,16 +84,18 @@ impl<'a> super::View for MainMenu<'a> {
 #[cfg(test)]
 mod tests {
     use std::io;
+    use std::io::Read;
     use rusqlite::Connection;
     use super::MainMenu;
     use super::super::View;
     use crate::db::init::init_db;
 
+ 
     #[test]
     fn main_menu_test() -> io::Result<()> {
         let c = Connection::open_in_memory().unwrap();
         init_db(&c);
-        let mut m  :Box<dyn View>  = Box::new(MainMenu::new(&c));
+        let mut m  :Box<dyn View>  = Box::new(MainMenu::new());
         m.exec()?;
         m = m.next().unwrap();
         m.exec()?;

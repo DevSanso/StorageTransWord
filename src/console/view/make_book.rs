@@ -4,9 +4,8 @@ use std::io::{self,BufRead};
 use crate::db::table::Book;
 use crate::console::component::BookList;
 use crate::console::view::err::{ErrorView,ErrorStringView};
-
-pub struct MakeBookView {
-    conn : &'static Connection,
+use crate::var::Var;
+pub struct MakeBookView{
     list : Option<BookList>,
     is_done : bool,
     input_data :String,
@@ -17,8 +16,8 @@ pub struct MakeBookView {
 
 
 impl MakeBookView {
-    pub fn new(conn : &'static Connection) -> MakeBookView {
-        let mut b = MakeBookView{conn : conn,
+    pub fn new() -> MakeBookView {
+        let mut b = MakeBookView{
             list : None,
             is_done : false,
             input_data : String::new(),
@@ -32,7 +31,8 @@ impl MakeBookView {
 
     fn insert_book(&self) -> rusqlite::Result<()>{
         let s = self.input_data.clone();
-        Book::push(self.conn,s)
+        let conn = Var::get_db_conn_as_mut_ref();
+        Book::push(conn,s)
     }
 }
 
@@ -50,7 +50,8 @@ impl View for MakeBookView {
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
-        let g = Book::list(self.conn).unwrap();
+        let conn = Var::get_db_conn_as_mut_ref();
+        let g = Book::list(conn).unwrap();
         self.list = Option::Some(BookList::new(g));
         self.insert_res = self.insert_book();
         
@@ -60,7 +61,7 @@ impl View for MakeBookView {
     fn is_more_run(&self) -> bool {
         !self.is_done
     }
-    fn next(&self) -> Option<Box<dyn View>> {
+    fn next<'b>(&self) -> Option<Box<dyn View + 'b>> {
         if self.insert_res.is_ok() {
             None
         }
