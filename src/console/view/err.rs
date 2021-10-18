@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::io::{self,Read};
+use std::io::{self,BufRead};
 
 
 use super::View;
@@ -10,7 +10,7 @@ pub struct ErrorView<T>  where T : Error{
 
 
 impl<T> ErrorView<T> where T : Error{
-    pub fn new(err : T) -> ErrorView<T> {
+    pub fn new<'a>(err : T) -> ErrorView<T> {
         ErrorView {msg : err}
     }
 }
@@ -24,7 +24,7 @@ impl<T> View for ErrorView<T> where T : Error {
         Ok(())
     }
     fn input(&mut self) -> io::Result<()> {
-        io::stdin().lock().read_to_string(&mut String::new())?;
+        io::stdin().lock().read_line(&mut String::new())?;
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
@@ -33,7 +33,7 @@ impl<T> View for ErrorView<T> where T : Error {
     fn is_more_run(&self) -> bool {
         false
     }
-    fn next(&self) -> Option<Box<dyn View>>{
+    fn next<'b>(&self) -> Option<Box<dyn View + 'b>>{
         None
     }
 }
@@ -58,7 +58,7 @@ impl<'a> View for ErrorStringView<'a> {
         Ok(())
     }
     fn input(&mut self) -> io::Result<()> {
-        io::stdin().lock().read_to_string(&mut String::new())?;
+        io::stdin().lock().read_line(&mut String::new())?;
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
@@ -67,7 +67,7 @@ impl<'a> View for ErrorStringView<'a> {
     fn is_more_run(&self) -> bool {
         false
     }
-    fn next(&self) -> Option<Box<dyn View>>{
+    fn next<'b>(&self) -> Option<Box<dyn View + 'b>>{
         None
     }
 }
