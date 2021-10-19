@@ -45,6 +45,7 @@ pub trait View {
 pub mod main;
 pub mod err;
 pub mod make_book;
+pub mod word;
 
 pub fn first_view<'a>() -> Box<dyn View + 'a> {
     Box::new(main::MainMenu::new())
