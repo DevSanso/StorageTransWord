@@ -47,7 +47,7 @@ impl super::View for MainMenu{
     fn display(&self) -> io::Result<()> {
         print!("{}\n",self.title);
         print!("{}\n",self.list);
-        print!("입력 => 책 생성 (1), 책 불려오기(2), 종료(9) >>");
+        print!("{}\n","입력 => 책 생성 (1), 책 불려오기(2), 종료(9)");
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
@@ -89,12 +89,11 @@ mod tests {
     use super::MainMenu;
     use super::super::View;
     use crate::db::init::init_db;
-
+    use crate::var::Var;
  
     #[test]
     fn main_menu_test() -> io::Result<()> {
-        let c = Connection::open_in_memory().unwrap();
-        init_db(&c);
+        Var::test_init();
         let mut m  :Box<dyn View>  = Box::new(MainMenu::new());
         m.exec()?;
         m = m.next().unwrap();
