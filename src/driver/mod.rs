@@ -1,5 +1,5 @@
-
 mod papago;
+
 use papago::PapagoDriver;
 
 
@@ -20,11 +20,11 @@ pub struct Response {
 
 
 
-
 pub trait Driver  {
     fn trans(&self,word : String) -> Response;
-   
+    fn name(&self) -> &'static str;
 }
+
 
 pub fn facory(config : String,target : Drivers) -> Box<dyn Driver> {
     let c = match target {

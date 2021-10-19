@@ -1,3 +1,4 @@
+use std::fmt;
 use super::{Driver,Config};
 use super::Response as SelfResponse;
 use serde::{Deserialize};
@@ -25,7 +26,11 @@ pub struct PapagoConfig {
     client_secret : String,
 }
 
-
+impl fmt::Display for PapagoDriver {
+    fn fmt(&self,f : &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f,"id : {} , secret : {}",self.client_id,self.client_secret)
+    }
+}
 
 impl Config for PapagoConfig {
     fn new(source : String) -> Result<Self,String> where Self : Sized {
@@ -96,6 +101,9 @@ impl Driver for PapagoDriver {
             data : PapagoDriver::extract_trans_text_in_res_body(res.text().unwrap())
         }
         
+    }
+    fn name(&self) -> &'static str {
+        "PapagoDriver"
     }
 }
 

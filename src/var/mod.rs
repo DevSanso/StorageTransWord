@@ -1,8 +1,6 @@
 use std::path::Path;
 use std::include_str;
 use std::fs::read_to_string;
-#[macro_use]
-use lazy_static::lazy_static;
 
 use rusqlite::Connection;
 
@@ -24,26 +22,74 @@ fn read_config() -> String {
 }
 
 
-lazy_static! {
-    static ref f : VarField = {
-       
-        let db_path = Path::new("./").join(DBNAME);
-        let driver_config = read_config();
-        let conn = Connection::open(db_path);
-        let trans_driver = driver::facory(driver_config, driver::Drivers::Papago);
-        VarField {conn : conn.unwrap(),driver : trans_driver}
-    };
-}
+static mut f : Option<VarField> = None;
 const DBNAME : &str = "words.db";
 
 impl Var {
-  
-    pub fn get_db_conn_as_mut_ref() -> &'static mut rusqlite::Connection{
-        &mut f.conn
+    #[cfg(test)]
+    pub fn test_init() -> Result<(),&'static str> {
+        unsafe {
+            if f.is_some() {
+                return Err("already init var");
+            }
+        }
+        let driver_config = String::from(include_str!("../../test_config/papago.json"));
+        let conn = Connection::open_in_memory().unwrap();
+        let trans_driver = driver::facory(driver_config, driver::Drivers::Papago);
+        init_db(&conn);
+        unsafe {
+            f = Some(VarField {conn : conn,driver : trans_driver});
+        }
+
+        Ok(())
+    }
+
+    pub fn init() -> Result<(),&'static str> {
+        unsafe {
+            if f.is_some() {
+                return Err("already init var");
+            }
+        }
+        let db_path = Path::new("./").join(DBNAME);
+        let driver_config = read_config();
+        let conn = Connection::open(db_path).unwrap();
+        let trans_driver = driver::facory(driver_config, driver::Drivers::Papago);
+        init_db(&conn);
+        unsafe {
+            f = Some(VarField {conn : conn,driver : trans_driver});
+        }
+
+        Ok(())
+    }
+    pub  fn get_db_conn_as_mut_ref() -> &'static rusqlite::Connection{
+        unsafe{    
+            match &f {
+                    Some(s) => &s.conn,
+                    None => panic!("not init var")
+            }
+        }
     }
 
     pub fn get_driver_as_ref() ->&'static Box<dyn Driver> {
-        &f.driver
+        unsafe {
+            match &f {
+                Some(s) => &s.driver,
+                None => panic!("not init var")
+            }
+        }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn var_init_test() -> Result<(),&'static str>{
+        super::Var::test_init();
+        let conn = super::Var::get_db_conn_as_mut_ref();
+        let driver = super::Var::get_driver_as_ref();
+        println!("{}",driver.name());
+        Ok(())
     }
 }
 
