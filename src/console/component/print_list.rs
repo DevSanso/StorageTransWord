@@ -1,7 +1,7 @@
 use std::fmt::{Display,Formatter};
 use std::fmt;
 
-use crate::db::table::Book;
+use crate::db::table::{Book,Word};
 
 
 
@@ -35,10 +35,49 @@ impl Display for BookList {
     }
 }
 
+pub struct WordList {
+    book_name : String,
+    words : Vec<Word>
+}
+
+impl WordList {
+    pub fn new(book_name : String,words : Vec<Word>) -> WordList {
+        WordList {book_name : book_name, words : words}
+    }
+}
+
+impl Display for WordList {
+    fn fmt(&self, f : &mut Formatter) -> fmt::Result {
+        writeln!(f,"| {:<16} | {:>48} |","Book Name",self.book_name);
+        let word_count  = self.words.len();
+        
+        writeln!(f,"{ } => {}\n\n","Word Count",word_count);
+        
+        
+        if word_count == 0 {
+            return Ok(());
+        }
+        writeln!(f,
+            "|{:>8} | {:>5} | {:>20} | {:>20}|\n",
+            "chapter","page","origin text","trans text"
+        );
+        for i in 0..word_count-1 {
+            let item = &self.words[i];
+            writeln!(f,
+                "|{:08} | {:05} | {:<20} | {:<20}|",
+            item.chapter,item.page,item.origin_text,item.trans_text);
+        }
+        writeln!(f,"\n\n");
+
+        Ok(())
+    }
+}
+
 
 #[cfg(test)]
 mod test {
     use crate::db::table::Book;
+    use crate::db::table::Word;
     #[test]
     fn book_list_test() {
         let mut v = Vec::new();
@@ -46,6 +85,23 @@ mod test {
             v.push(Book{book_id : 0,name : String::from("sdf")})
         }
         let l = super::BookList::new(v);
+        println!("{}",l);
+    }
+    #[test]
+    fn word_list_test() {
+        let mut v = Vec::new();
+        for i in 0..4 {
+            let w = Word {
+                book_id : 0,
+                chapter : i,
+                page : 0,
+                origin_text : String::from("df"),
+                trans_text : String::from("dd")
+            };
+            v.push(w);
+        }
+
+        let l = super::WordList::new(String::from("hello"),v);
         println!("{}",l);
     }
 }
