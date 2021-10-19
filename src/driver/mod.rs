@@ -14,8 +14,8 @@ pub enum Drivers {
 
 
 pub struct Response {
-    status_code : u16,
-    data : String
+    pub status_code : u16,
+    pub data : String
 }
 
 
