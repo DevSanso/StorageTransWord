@@ -72,7 +72,7 @@ impl Display for Word {
 
 
 impl Word {
-    fn new(book_id : i32,chapter : i32,page : i32,origin_text : String ,trans_text : String) -> Word {
+    pub fn new(book_id : i32,chapter : i32,page : i32,origin_text : String ,trans_text : String) -> Word {
         Word {
             book_id : book_id,
             chapter : chapter,
