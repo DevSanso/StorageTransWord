@@ -37,18 +37,20 @@ impl Display for BookList {
 
 pub struct WordList {
     book_name : String,
+    chapter : i32,
     words : Vec<Word>
 }
 
 impl WordList {
-    pub fn new(book_name : String,words : Vec<Word>) -> WordList {
-        WordList {book_name : book_name, words : words}
+    pub fn new(book_name : String,chapter : i32,words : Vec<Word>) -> WordList {
+        WordList {book_name : book_name,chapter : chapter, words : words}
     }
 }
 
 impl Display for WordList {
     fn fmt(&self, f : &mut Formatter) -> fmt::Result {
-        writeln!(f,"| {:<16} | {:>48} |","Book Name",self.book_name);
+        writeln!(f,"{:<12} => {:>24}","Book Name",self.book_name);
+        writeln!(f,"{:<12}  : {:03} ","chapter",self.chapter);
         let word_count  = self.words.len();
         
         writeln!(f,"{ } => {}\n\n","Word Count",word_count);
@@ -58,14 +60,14 @@ impl Display for WordList {
             return Ok(());
         }
         writeln!(f,
-            "|{:>8} | {:>5} | {:>20} | {:>20}|\n",
-            "chapter","page","origin text","trans text"
+            "| {:>5} | {:>20} | {:>20} |\n",
+            "page","origin text","trans text"
         );
         for i in 0..word_count-1 {
             let item = &self.words[i];
             writeln!(f,
-                "|{:08} | {:05} | {:<20} | {:<20}|",
-            item.chapter,item.page,item.origin_text,item.trans_text);
+                "| {:05} | {:<20} | {:<20} |",
+            item.page,item.origin_text,item.trans_text);
         }
         writeln!(f,"\n\n");
 
@@ -101,7 +103,7 @@ mod test {
             v.push(w);
         }
 
-        let l = super::WordList::new(String::from("hello"),v);
+        let l = super::WordList::new(String::from("hello"),1,v);
         println!("{}",l);
     }
 }
