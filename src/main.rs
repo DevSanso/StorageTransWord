@@ -12,7 +12,7 @@ struct Stack<T> {
 
 impl<T> Stack<T>{
     fn new_first(v: T) -> Self {
-        let s = Stack{arr : Vec::new()};
+        let mut s = Stack{arr : Vec::new()};
         s.push(v);
         s
     }
@@ -44,4 +44,30 @@ fn main() -> std::io::Result<()> {
         if n.is_some() { s.push(n.unwrap());}
     }
     Ok(())
+}
+#[cfg(test)]
+mod tests {
+    use crate::console;
+    use crate::var;
+    use super::Stack;
+
+    #[test]
+    fn main_test() -> std::io::Result<()> {
+        let var_init_err = var::Var::test_init().err();
+        if var_init_err.is_some() {
+            panic!("{}",var_init_err.unwrap());
+        }
+        let mut s  = Stack::new_first(console::view::first_view());
+        loop {
+            let box_v = s.pop();
+            if box_v.is_none() {break;}
+    
+            let mut v = box_v.unwrap();
+            v.exec()?;
+            let n = v.next();
+            if v.is_more_run() {s.push(v);}
+            if n.is_some() { s.push(n.unwrap());}
+        }
+        Ok(())
+    }
 }
