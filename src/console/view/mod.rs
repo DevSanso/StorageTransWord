@@ -15,7 +15,7 @@ fn clean() -> io::Result<ExitStatus> {
 
 
 
-trait View {
+pub trait View {
 
     fn display(&self) -> io::Result<()> ;
     fn input(&mut self) -> io::Result<()>;
@@ -46,7 +46,9 @@ pub mod main;
 pub mod err;
 pub mod make_book;
 
-
+pub fn first_view<'a>() -> Box<dyn View + 'a> {
+    Box::new(main::MainMenu::new())
+}
 
 #[cfg(test)]
 mod tests {
@@ -56,6 +58,4 @@ mod tests {
         println!("hello! \n");
         super::clean().unwrap();
     }
-
-    
 }

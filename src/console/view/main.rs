@@ -11,7 +11,7 @@ use super::super::component::{Title,BookList};
 
 
 
-struct MainMenu {
+pub struct MainMenu {
     is_close : bool,
     title : Title,
     list : BookList,
