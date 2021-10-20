@@ -6,6 +6,7 @@ use crate::var::Var;
 use crate::db::table::Book;
 use crate::console::view::err::{ErrorView,ErrorStringView};
 use crate::console::view::make_book::MakeBookView;
+use crate::console::view::word::WordView;
 use super::super::component::{Title,BookList};
 
 
@@ -33,7 +34,8 @@ impl MainMenu{
 
     fn make_next_view<'b>(&self,n : i32) -> Option<Box<dyn super::View + 'b>> {
         match n {
-            1 => None,
+            1 => Some(Box::new(MakeBookView::new())),
+            2 => None,
             9 => None,
             _ => Some(Box::new(ErrorStringView::new("only input 1,2,9")))
         }
