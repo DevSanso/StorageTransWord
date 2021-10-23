@@ -54,7 +54,7 @@ impl Book {
     }
     
 }
-
+#[derive(Clone)]
 pub struct Word {
     pub book_id : i32,
     pub chapter : i32,
