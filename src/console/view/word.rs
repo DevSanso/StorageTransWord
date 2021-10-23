@@ -50,22 +50,8 @@ impl WordView {
         w.update_word_list();
         w
     }
-
-    fn stdin_read_and_init_word_struct_data(&self) -> Result<Word,&'static str>  {
-        let mut w = Word::new(self.book_id,self.chapter,0,String::new(),String::new());
-        let mut temp_buf = String::new();
-        println!("페이지를 입력하세요(숫자만) : ");
-        io::stdin().lock().read_line(&mut temp_buf);
-        temp_buf = temp_buf.replace("\n", "");
-        let casting = temp_buf.parse::<i32>();
-        if casting.is_err() {
-            return Err("숫자만 입력하세요");
-        }
-        w.page = casting.unwrap();
-
-        println!("영어 단어를 입력하세요 : ");
-        io::stdin().lock().read_line(&mut w.origin_text);
-        Ok(w)
+    fn make_empty_word(&self) -> Word {
+        Word::new(self.book_id,self.chapter,0,String::new(),String::new())
     }
     fn input_num_temp(&mut self) {
         let mut buf = String::new();
@@ -74,10 +60,31 @@ impl WordView {
         let casting = buf.parse::<i32>();
         if casting.is_err() {
             self.input_result = Err(String::from("숫자만 입력하세요"));
+            self.num_temp = None;
             return;
         }
         self.num_temp = Some(casting.unwrap());
     }
+    fn stdin_read_page_and_write_word_struct(&mut self,w : &mut Word) -> Result<(),&'static str>{
+        let temp = self.num_temp;
+        println!("페이지(숫자)를 입력하세요 : ");
+        self.input_num_temp();
+
+        if self.num_temp.is_none() {
+            self.num_temp = temp;
+            return Err("숫자만 입력하세요");
+        }
+        w.page = self.num_temp.unwrap();
+        self.num_temp = temp;
+
+        Ok(())
+    }
+    fn stdin_read_en_word_and_write_word_struct(&self,w : &mut Word) -> Result<(),&'static str> {
+        println!("영어 단어를 입력하세요 : ");
+        io::stdin().lock().read_line(&mut w.origin_text);
+        Ok(())
+    }
+   
     fn insert_word(&self, w : Word) -> Result<(),&'static str>{
         let mut temp = w;
         let trans_d = Var::get_driver_as_ref();
@@ -98,11 +105,9 @@ impl WordView {
 
         Ok(())
     }
-    fn change_chapter(&mut self) -> Result<(),&'static str> {
+    fn input_change_chapter(&mut self) {
         println!("챕터(숫자)를 입력하세요 : ");
         self.input_num_temp();
-
-        Ok(())
     }
 
     fn update_word_list(&mut self) {
@@ -160,13 +165,27 @@ impl View for WordView {
     }
     fn input(&mut self) -> io::Result<()> {
         if self.action == Action::Insert || self.action == Action::Delete{
-            self.input_result = match self.stdin_read_and_init_word_struct_data() {
-                Ok(ok) => Ok(Some(ok)),
+            let mut w = self.make_empty_word();
+            if self.action == Action::Insert  {
+                let r = self.stdin_read_page_and_write_word_struct(&mut w);
+                if r.is_err() {
+                    self.input_result = Err(String::from(r.err().unwrap()));
+                    return Ok(());
+                }
+                
+            }
+
+            self.input_result = match self.stdin_read_en_word_and_write_word_struct(&mut w) {
+                Ok(ok) => Ok(Some(w)),
                 Err(err) => Err(String::from(err))
             };
             
             return Ok(());
         }
+        else if self.action == Action::ChangeChapter {
+            self.input_change_chapter();
+        }
+        
         else {self.input_num_temp();}
 
         Ok(())
