@@ -26,7 +26,8 @@ impl Display for BookList {
         if count == 0 {
             return Ok(());
         }
-        for i in 0..count-1 {
+
+        for i in 0..count  {
             writeln!(f," {id}  :  {name} ",id = self.arr[i].book_id,name = self.arr[i].name)?;
         }
 
@@ -60,14 +61,14 @@ impl Display for WordList {
             return Ok(());
         }
         writeln!(f,
-            "| {:>5} | {:>20} | {:>20} |\n",
+            "| {:>5} | {:>20} | {:>20}  |\n",
             "page","origin text","trans text"
         );
-        for i in 0..word_count-1 {
+        for i in 0..word_count {
             let item = &self.words[i];
             writeln!(f,
-                "| {:05} | {:<20} | {:<20} |",
-            item.page,item.origin_text,item.trans_text);
+                "| {:05} | {:>20} | {:>20} |",
+            item.page,item.origin_text.replace("\n", ""),item.trans_text);
         }
         writeln!(f,"\n\n");
 
@@ -97,7 +98,7 @@ mod test {
                 book_id : 0,
                 chapter : i,
                 page : 0,
-                origin_text : String::from("df"),
+                origin_text : String::from("dhellof"),
                 trans_text : String::from("dd")
             };
             v.push(w);
