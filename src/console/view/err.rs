@@ -39,18 +39,21 @@ impl<T> View for ErrorView<T> where T : Error {
 }
 
 
-pub struct ErrorStringView<'a>{
-    msg : &'a str
+pub struct ErrorStringView{
+    msg : String
 }
 
-impl<'a> ErrorStringView<'a>{
-    pub fn new (err : &'a str) -> ErrorStringView {
+impl ErrorStringView{
+    pub fn new_str (err : &str) -> ErrorStringView {
+        ErrorStringView {msg : String::from(err)}
+    }
+    pub fn new(err : String) -> ErrorStringView {
         ErrorStringView {msg : err}
     }
 }
 
 
-impl<'a> View for ErrorStringView<'a> {
+impl View for ErrorStringView{
     fn display(&self) -> io::Result<()> {
         println!("error message : {}",self.msg);
         print!("press click enter");

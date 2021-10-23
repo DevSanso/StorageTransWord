@@ -66,7 +66,7 @@ impl View for MakeBookView {
             None
         }
         else {
-            Some(Box::new(ErrorStringView::new("error, that input book name in db\n")))
+            Some(Box::new(ErrorStringView::new_str("error, that input book name in db\n")))
         }
     }
 }

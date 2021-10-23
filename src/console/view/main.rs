@@ -37,7 +37,7 @@ impl MainMenu{
             1 => Some(Box::new(MakeBookView::new())),
             2 => None,
             9 => None,
-            _ => Some(Box::new(ErrorStringView::new("only input 1,2,9")))
+            _ => Some(Box::new(ErrorStringView::new_str("only input 1,2,9")))
         }
 
         
