@@ -27,7 +27,8 @@ pub struct WordView {
     action : Action,
 
     input_result : Result<Option<Word>,String>,
-    num_temp : Option<i32>
+    num_temp : Option<i32>,
+    err_message : Option<String>
 
 }
 
@@ -40,8 +41,11 @@ impl WordView {
             list : None,
             is_close : false,
             action : Action::Nothing,
+
+
             input_result : Ok(None),
-            num_temp : None
+            num_temp : None,
+            err_message : None
         };
         w.update_word_list();
         w
@@ -50,7 +54,7 @@ impl WordView {
     fn stdin_read_and_init_word_struct_data(&self) -> Result<Word,&'static str>  {
         let mut w = Word::new(self.book_id,self.chapter,0,String::new(),String::new());
         let mut temp_buf = String::new();
-        print!("페이지를 입력하세요(숫자만) : ");
+        println!("페이지를 입력하세요(숫자만) : ");
         io::stdin().lock().read_line(&mut temp_buf);
         temp_buf = temp_buf.replace("\n", "");
         let casting = temp_buf.parse::<i32>();
@@ -59,7 +63,7 @@ impl WordView {
         }
         w.page = casting.unwrap();
 
-        print!("영어 단어를 입력하세요 : ");
+        println!("영어 단어를 입력하세요 : ");
         io::stdin().lock().read_line(&mut w.origin_text);
         Ok(w)
     }
@@ -95,7 +99,7 @@ impl WordView {
         Ok(())
     }
     fn change_chapter(&mut self) -> Result<(),&'static str> {
-        print!("챕터(숫자)를 입력하세요 : ");
+        println!("챕터(숫자)를 입력하세요 : ");
         self.input_num_temp();
 
         Ok(())
@@ -123,7 +127,23 @@ impl WordView {
         else if num == 4 {self.action = Action::Exit;}
         else {self.action = Action::Nothing;}
     }
-       
+    fn update_input_result_None(self : &mut Self) {
+        self.input_result = Ok(None);
+    }
+
+    fn if_input_err_and_update(&mut self) -> bool {
+        let mut res =  self.input_result.clone();
+
+        if res.is_err() {
+            self.num_temp = Some(-1);
+            self.sub_update_next_action();
+            self.err_message = Some(res.err().unwrap());
+            self.input_result = Ok(None);
+            return true;
+        }
+
+        false
+    }
 
 }
 
@@ -139,7 +159,7 @@ impl View for WordView {
         Ok(())
     }
     fn input(&mut self) -> io::Result<()> {
-        if self.action == Action::Insert && self.action == Action::Delete{
+        if self.action == Action::Insert || self.action == Action::Delete{
             self.input_result = match self.stdin_read_and_init_word_struct_data() {
                 Ok(ok) => Ok(Some(ok)),
                 Err(err) => Err(String::from(err))
@@ -152,36 +172,45 @@ impl View for WordView {
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
+        if self.if_input_err_and_update() {
+            return Ok(());
+        }
+        self.err_message = None;
+        if self.action == Action::ChangeChapter {
+            self.chapter = self.num_temp.unwrap();
+            self.num_temp = Some(-1);
+        }
+        
+        if self.action == Action::Insert {
+            let w = self.input_result.clone().unwrap().unwrap();
+            let insert_res = self.insert_word(w);
+            if insert_res.is_err() {
+                self.input_result = Err(String::from(insert_res.err().unwrap()))
+            }
+            self.num_temp = Some(-1);
+        }
+        else if self.action == Action::Delete {
+            let w = self.input_result.clone().unwrap().unwrap();
+            
+            let del_res = self.delete_word(w);
+            if del_res.is_err() {
+                self.input_result = Err(String::from(del_res.err().unwrap()))
+            }
+            self.num_temp = Some(-1);
+        }
+        if self.if_input_err_and_update() {
+            return Ok(());
+        }
+
         self.sub_update_next_action();
+
 
         if self.action == Action::Exit {
             self.is_close = true;
             return Ok(());
         }
-        else if self.action == Action::ChangeChapter {
-            self.chapter = self.num_temp.unwrap();
-            self.action = Action::Nothing;
-            return Ok(());
-        }
 
-    
 
-        let res = self.input_result.clone();
-        if res.is_err() {
-            return Ok(());
-        }
-        
-        if self.action == Action::Insert {
-            let mut w = res.unwrap().unwrap();
-            self.insert_word(w);
-        }
-        else if self.action == Action::Delete {
-            let w = res.unwrap().unwrap();
-            self.delete_word(w);
-        }
-
-        self.action = Action::Nothing;
-       
         self.update_word_list();
         Ok(())
     }
@@ -189,8 +218,9 @@ impl View for WordView {
         !self.is_close
     }
     fn next<'parent>(&self) -> Option<Box<dyn View + 'parent>> {
-        if self.input_result.is_err() {
-            let msg = self.input_result.clone().err().unwrap();
+        if self.err_message.is_some() {
+            let msg = self.err_message.clone().unwrap();
+            
             return Some(Box::new(ErrorStringView::new(
                 msg
             )));
