@@ -15,6 +15,15 @@ impl BookList {
     pub fn new(arr : Vec<Book>) -> BookList {
         BookList {arr :arr}
     }
+    pub fn search_book_id(&self,name : String) -> i32 {
+        let mut iter = self.arr.iter();
+        
+        let f = iter.find(move |&x| x.name == name); 
+        if f.is_none() {
+            return -1;
+        }
+        return f.unwrap().book_id;
+    }
 }
 
 impl Display for BookList {
@@ -84,11 +93,17 @@ mod test {
     #[test]
     fn book_list_test() {
         let mut v = Vec::new();
-        for _ in 0..3 {
-            v.push(Book{book_id : 0,name : String::from("sdf")})
+        for i in 0..3 {
+            let mut s = String::from("sdf");
+           s.push_str(
+                format!("{}",i).as_str()
+            );
+            v.push(Book{book_id : i,name : s})
         }
         let l = super::BookList::new(v);
+        let a = l.search_book_id(String::from("sdf1"));
         println!("{}",l);
+        println!("{}",a);
     }
     #[test]
     fn word_list_test() {
