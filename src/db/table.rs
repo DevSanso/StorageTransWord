@@ -52,6 +52,20 @@ impl Book {
 
         Ok(v)
     }
+    pub fn find_id(conn : &Connection,name : String) -> rusqlite::Result<i32> {
+        const SEL_Q : &str = "SELECT book_id FROM book WHERE name = ?1;";
+        let id : rusqlite::Result<i32> = conn.query_row(
+            SEL_Q,
+            [name],
+            |row| row.get(0)
+        );
+
+        match id {
+            Ok(ok) => Ok(ok),
+            Err(_) => Ok(-1)
+        }
+
+    }
     
 }
 #[derive(Clone)]
@@ -160,7 +174,8 @@ mod tests {
         init_db(&conn)?;
 
         push_book(&conn)?;
-        
+        let id= super::Book::find_id(&conn, String::from("hi"));
+        println!("find id : {}",id.unwrap());
         
         let mut v = super::Book::list(&conn)?;
         println!("push");
