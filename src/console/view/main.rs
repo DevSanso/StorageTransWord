@@ -16,7 +16,7 @@ pub struct MainMenu {
     is_close : bool,
     title : Title,
     list : BookList,
-
+    book_select_name : String,
     input_data : Result<i32,std::num::ParseIntError>,
 }
 
@@ -26,16 +26,27 @@ impl MainMenu{
         MainMenu{
             is_close : false,
             title : Title::new(),
+            book_select_name : String::new(),
             list : BookList::new(Book::list(conn).unwrap()),
 
             input_data : Result::Ok(0)
         }
     }
-
+    fn make_word_view<'b>(&self) -> Box<dyn super::View + 'b>{
+        let i = self.list.search_book_id(self.book_select_name.clone());
+        if i == -1 {
+           return Box::new(ErrorStringView::new_str("not exist book name"));
+        }
+        Box::new(WordView::new(self.book_select_name.clone(),i,1))
+    }
+    fn input_book_select_name(&mut self) {
+        io::stdin().lock().read_line(&mut self.book_select_name);
+        self.book_select_name = self.book_select_name.replace("\n", "");
+    }
     fn make_next_view<'b>(&self,n : i32) -> Option<Box<dyn super::View + 'b>> {
         match n {
             1 => Some(Box::new(MakeBookView::new())),
-            2 => None,
+            2 => Some(self.make_word_view()),
             9 => None,
             _ => Some(Box::new(ErrorStringView::new_str("only input 1,2,9")))
         }
@@ -65,7 +76,11 @@ impl super::View for MainMenu{
     fn input(&mut self) -> io::Result<()> {
         let mut buf = String::new();
         io::stdin().lock().read_line(&mut buf).unwrap();
-        self.input_data=buf.parse::<i32>();
+        self.input_data=buf.replace("\n","").parse::<i32>();
+
+        if self.input_data.clone().unwrap() == 2 {
+            self.input_book_select_name();
+        }
 
         Ok(())
     }
@@ -92,14 +107,28 @@ mod tests {
     use super::super::View;
     use crate::db::init::init_db;
     use crate::var::Var;
- 
+    use crate::stack::Stack;
     #[test]
     fn main_menu_test() -> io::Result<()> {
         Var::test_init();
         let mut m  :Box<dyn View>  = Box::new(MainMenu::new());
-        m.exec()?;
-        m = m.next().unwrap();
-        m.exec()?;
+        let mut s = Stack::new_first(m);
+        loop {
+            let v = s.pop();
+            if v.is_none() {
+                break;
+            }
+            let mut c = v.unwrap();
+            c.exec();
+
+            let n = c.next();
+            if c.is_more_run() {
+                s.push(c);
+            }
+            if n.is_some() {
+                s.push(n.unwrap());
+            }
+        }
 
         Ok(())
     }
