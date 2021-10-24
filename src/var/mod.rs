@@ -17,7 +17,7 @@ struct VarField {
 }
 
 fn read_config() -> String {
-    let p = Path::new("./").join("./driver_config.json");
+    let p = Path::new("./").join("driver_config.json");
     read_to_string(p).unwrap()
 }
 
