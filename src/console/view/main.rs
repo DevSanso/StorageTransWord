@@ -1,5 +1,5 @@
 use std::io::{self,BufRead};
-use rusqlite::Connection;
+
 
 
 use crate::var::Var;
@@ -7,7 +7,8 @@ use crate::db::table::Book;
 use crate::console::view::err::{ErrorView,ErrorStringView};
 use crate::console::view::make_book::MakeBookView;
 use crate::console::view::word::WordView;
-use super::super::component::{Title,BookList};
+use crate::console::view::book_list::BookListView;
+use super::super::component::{Title};
 
 
 
@@ -15,7 +16,6 @@ use super::super::component::{Title,BookList};
 pub struct MainMenu {
     is_close : bool,
     title : Title,
-    list : BookList,
     book_select_name : String,
     input_data : Result<i32,std::num::ParseIntError>,
 }
@@ -27,31 +27,33 @@ impl MainMenu{
             is_close : false,
             title : Title::new(),
             book_select_name : String::new(),
-            list : BookList::new(Book::list(conn).unwrap()),
 
             input_data : Result::Ok(0)
         }
     }
     fn make_word_view<'b>(&self) -> Box<dyn super::View + 'b>{
-        let i = self.list.search_book_id(self.book_select_name.clone());
+        let conn = Var::get_db_conn_as_mut_ref();
+        
+        let i = Book::find_id(&conn,self.book_select_name.clone()).unwrap();
+
         if i == -1 {
            return Box::new(ErrorStringView::new_str("not exist book name"));
         }
         Box::new(WordView::new(self.book_select_name.clone(),i,1))
     }
     fn input_book_select_name(&mut self) {
+        println!("책 이름을 입력하세요");
         io::stdin().lock().read_line(&mut self.book_select_name);
         self.book_select_name = self.book_select_name.replace("\n", "");
     }
     fn make_next_view<'b>(&self,n : i32) -> Option<Box<dyn super::View + 'b>> {
         match n {
             1 => Some(Box::new(MakeBookView::new())),
-            2 => Some(self.make_word_view()),
+            2 => Some(Box::new(BookListView::new())),
+            3 => Some(self.make_word_view()),
             9 => None,
             _ => Some(Box::new(ErrorStringView::new_str("only input 1,2,9")))
         }
-
-        
     } 
 }
 
@@ -59,8 +61,7 @@ impl MainMenu{
 impl super::View for MainMenu{
     fn display(&self) -> io::Result<()> {
         print!("{}\n",self.title);
-        print!("{}\n",self.list);
-        print!("{}\n","입력 => 책 생성 (1), 책 불려오기(2), 종료(9)");
+        print!("{}\n","입력 => 책 생성 (1), 책 목록 불려오기(2), 책 선택(3),종료(9)");
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
@@ -68,8 +69,6 @@ impl super::View for MainMenu{
         if val == 9 {
             self.is_close = true;
         }
-        let conn = Var::get_db_conn_as_mut_ref();
-        self.list = BookList::new(Book::list(conn).unwrap());
         Ok(())
     }
 
@@ -78,7 +77,7 @@ impl super::View for MainMenu{
         io::stdin().lock().read_line(&mut buf).unwrap();
         self.input_data=buf.replace("\n","").parse::<i32>();
 
-        if self.input_data.clone().unwrap() == 2 {
+        if self.input_data.clone().unwrap() == 3 {
             self.input_book_select_name();
         }
 
