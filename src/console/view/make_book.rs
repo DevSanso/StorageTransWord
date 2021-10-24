@@ -23,10 +23,14 @@ impl MakeBookView {
             input_data : String::new(),
             insert_res : Ok(())
         };
-        b.update();
+        b.update_list();
         b
     }
-
+    fn update_list(&mut self) {
+        let conn = Var::get_db_conn_as_mut_ref();
+        let g = Book::list(conn).unwrap();
+        self.list = Option::Some(BookList::new(g));
+    }
 
 
     fn insert_book(&self) -> rusqlite::Result<()>{
@@ -46,13 +50,12 @@ impl View for MakeBookView {
     fn input(&mut self) -> io::Result<()> {
         let mut buf = String::new();
         io::stdin().lock().read_line(&mut buf).unwrap();
+       
         self.input_data=buf.replace("\n", "");
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
-        let conn = Var::get_db_conn_as_mut_ref();
-        let g = Book::list(conn).unwrap();
-        self.list = Option::Some(BookList::new(g));
+        self.update_list();
         self.insert_res = self.insert_book();
         
         self.is_done = true;
