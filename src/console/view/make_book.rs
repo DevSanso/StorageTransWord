@@ -46,7 +46,7 @@ impl View for MakeBookView {
     fn input(&mut self) -> io::Result<()> {
         let mut buf = String::new();
         io::stdin().lock().read_line(&mut buf).unwrap();
-        self.input_data=buf;
+        self.input_data=buf.replace("\n", "");
         Ok(())
     }
     fn update(&mut self) -> io::Result<()> {
@@ -55,7 +55,7 @@ impl View for MakeBookView {
         self.list = Option::Some(BookList::new(g));
         self.insert_res = self.insert_book();
         
-        
+        self.is_done = true;
         Ok(())
     }
     fn is_more_run(&self) -> bool {
