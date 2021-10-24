@@ -3,10 +3,18 @@ mod db;
 mod console;
 mod var;
 mod stack;
-
+mod help_str;
 use stack::Stack;
+use std::env;
+
 
 fn main() -> std::io::Result<()> { 
+
+    let hflag = env::args().find(|x|  x== "help" || x == "-h");
+    if hflag.is_some() {
+        println!("{}",help_str::HELP_USAGE);
+        return Ok(());
+    }
 
     let var_init_err = var::Var::init().err();
     if var_init_err.is_some() {
@@ -26,6 +34,8 @@ fn main() -> std::io::Result<()> {
     }
     Ok(())
 }
+
+
 #[cfg(test)]
 mod tests {
     use crate::console;
@@ -51,4 +61,5 @@ mod tests {
         }
         Ok(())
     }
+
 }
