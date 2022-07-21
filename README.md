@@ -17,7 +17,7 @@
 
 - **rust lang**
 - **sqlite**
-- ****
+- **openssh dev**
 - **파파고 api 설정 파일(**[https://developers.naver.com/docs/papago/papago-nmt-overview.md](https://developers.naver.com/docs/papago/papago-nmt-overview.md))
     
     ```json
